@@ -44,7 +44,7 @@ Rectangle {
     readonly property color _cItemSelected: _light ? "#D1D2D8" : "#2E3B4B"
     readonly property real  _frameMargin:   16
     readonly property real  _frameRadius:   18
-    readonly property real  _sidebarW:      ScreenTools.defaultFontPixelWidth * 26
+    readonly property real  _sidebarW:      ScreenTools.defaultFontPixelWidth * 35
 
     // Back button only when this is the full-screen Application Settings page (not embedded in the footer)
     readonly property bool showBackButton: mainWindow.settingsPageOpen
@@ -211,7 +211,7 @@ Rectangle {
 
         ColumnLayout {
             id:         buttonColumn
-            spacing:    12
+            spacing:    4
             width:      buttonList.width
 
             property real _maxButtonWidth: 0
@@ -225,6 +225,21 @@ Rectangle {
                     text:               name
                     icon.source:        iconUrl
                     visible:            pageVisible()
+                    Layout.minimumHeight:   ScreenTools.defaultFontPixelHeight * 2
+                    Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 2
+                    Layout.topMargin: (index === 1 || index === 5 || index === 10) ? ScreenTools.defaultFontPixelHeight * 1.8 : 0
+                    // Group heading (Flight, Connections, Developer), drawn above the item
+                    QGCLabel {
+                        visible:              index === 1 || index === 5 || index === 10
+                        text:                 index === 1 ? qsTr("Flight") : index === 5 ? qsTr("Connections") : qsTr("Developer")
+                        anchors.bottom:       parent.top
+                        anchors.bottomMargin: ScreenTools.defaultFontPixelHeight * 0.4
+                        anchors.left:         parent.left
+                        anchors.leftMargin:   ScreenTools.defaultFontPixelWidth * 1.1
+                        font.pointSize:       ScreenTools.defaultFontPointSize
+                        font.bold:            true
+                        opacity:              0.6
+                    }
 
                     onClicked: {
                         if (mainWindow.allowViewSwitch()) {
@@ -272,6 +287,7 @@ Rectangle {
                             color:  sideBtn.icon.color
                             width:  ScreenTools.defaultFontPixelHeight * 0.85
                             height: ScreenTools.defaultFontPixelHeight * 0.85
+                            Layout.alignment: Qt.AlignVCenter
                         }
 
                         QGCLabel {
@@ -279,6 +295,7 @@ Rectangle {
                             text:               sideBtn.text
                             color:              sideBtn.textColor
                             horizontalAlignment: QGCLabel.AlignLeft
+                            Layout.alignment: Qt.AlignVCenter
                         }
                     }
 

@@ -167,6 +167,8 @@ ApplicationWindow {
 
     readonly property bool settingsPageOpen: toolDrawer.visible && toolDrawer._hideToolbar
 
+
+
     //-------------------------------------------------------------------------
     //-- Global simple message dialog
 

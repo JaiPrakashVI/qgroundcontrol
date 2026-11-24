@@ -19,12 +19,25 @@ import QGroundControl.ScreenTools
 import QGroundControl.Palette
 
 SettingsPage {
+    id: page
     property var _linkManager:          QGroundControl.linkManager
     property var _autoConnectSettings:  QGroundControl.settingsManager.autoConnectSettings
+
+    // Cards in 2 columns on wide Application Settings (same as Fly View)
+    GridLayout {
+        id:                     commCardGrid
+        Layout.fillWidth:       true
+        readonly property bool twoCol: (typeof mainWindow !== "undefined") && mainWindow.settingsPageOpen && page.width - 48 >= ScreenTools.defaultFontPixelWidth * 110
+        Layout.preferredWidth:  twoCol ? Math.min(page.width - 48, ScreenTools.defaultFontPixelWidth * 200) : -1
+        columns:                twoCol ? 2 : 1
+        columnSpacing:          ScreenTools.defaultFontPixelWidth * 2
+        rowSpacing:             ScreenTools.defaultFontPixelHeight
+        uniformCellWidths:      true
 
     SettingsGroupLayout {
         heading:        qsTr("AutoConnect")
         visible:        _autoConnectSettings.visible
+        Layout.fillWidth: true
 
         Repeater {
             id: autoConnectRepeater
@@ -51,7 +64,9 @@ SettingsPage {
 
     SettingsGroupLayout {
         heading: qsTr("NMEA GPS")
+        Layout.alignment: Qt.AlignTop
         visible: QGroundControl.settingsManager.autoConnectSettings.autoConnectNmeaPort.visible && QGroundControl.settingsManager.autoConnectSettings.autoConnectNmeaBaud.visible
+        Layout.fillWidth: true
 
         LabelledComboBox {
             id: nmeaPortCombo
@@ -112,6 +127,8 @@ SettingsPage {
 
     SettingsGroupLayout {
         heading: qsTr("Links")
+        Layout.fillWidth: true
+        Layout.columnSpan:  commCardGrid.twoCol ? 2 : 1
 
         Repeater {
             model: _linkManager.linkConfigurations
@@ -196,6 +213,8 @@ SettingsPage {
                 linkDialogComponent.createObject(mainWindow, { editingConfig: editingConfig, originalConfig: null }).open()
             }
         }
+    }
+
     }
 
     Component {

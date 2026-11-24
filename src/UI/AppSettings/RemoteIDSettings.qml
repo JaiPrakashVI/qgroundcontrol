@@ -22,6 +22,8 @@ import QGroundControl.Palette
 
 SettingsPage {
 
+    wideColumn: true
+
     // Visual properties
     property real _margins:             ScreenTools.defaultFontPixelWidth
     property real _labelWidth:          ScreenTools.defaultFontPixelWidth * 28
@@ -245,7 +247,8 @@ SettingsPage {
     }
 
     RowLayout {
-        spacing: ScreenTools.defaultFontPixelWidth
+        spacing: ScreenTools.defaultFontPixelWidth * 1.5
+        Layout.fillWidth: true
 
         Connections {
             target: regionFact
@@ -260,8 +263,8 @@ SettingsPage {
         }
 
         ColumnLayout {
-            spacing:            ScreenTools.defaultFontPixelHeight / 2
-            Layout.alignment:   Qt.AlignTop
+            spacing:            ScreenTools.defaultFontPixelHeight * 1
+            Layout.alignment: Qt.AlignTop; Layout.fillWidth: true
 
             SettingsGroupLayout {
                 Layout.fillWidth:   true
@@ -411,74 +414,74 @@ SettingsPage {
                 }
             }
 
-            SettingsGroupLayout {
-                heading:                qsTr("Self ID")
-                headingDescription:     qsTr("If an emergency is declared, Emergency Text will be broadcast even if Broadcast setting is not enabled.")
-                Layout.fillWidth:       true
-                Layout.preferredWidth:  textLabelWidth
+            // SettingsGroupLayout {
+            //     heading:                qsTr("Self ID")
+            //     headingDescription:     qsTr("If an emergency is declared, Emergency Text will be broadcast even if Broadcast setting is not enabled.")
+            //     Layout.fillWidth:       true
+            //     Layout.preferredWidth:  textLabelWidth
 
-                FactCheckBoxSlider {
-                    id:                 sendSelfIDSlider
-                    text:               qsTr("Broadcast")
-                    fact:               _fact
-                    visible:            _fact.visible
-                    Layout.fillWidth:   true
+            //     FactCheckBoxSlider {
+            //         id:                 sendSelfIDSlider
+            //         text:               qsTr("Broadcast")
+            //         fact:               _fact
+            //         visible:            _fact.visible
+            //         Layout.fillWidth:   true
 
-                    property Fact _fact: remoteIDSettings.sendSelfID
-                }
+            //         property Fact _fact: remoteIDSettings.sendSelfID
+            //     }
 
-                LabelledFactComboBox {
-                    id:                 selfIDTypeCombo
-                    label:              qsTr("Broadcast Message")
-                    fact:               _fact
-                    indexModel:         false
-                    visible:            _fact.visible
-                    enabled:            sendSelfIDSlider._fact.rawValue
-                    Layout.fillWidth:   true
+            //     LabelledFactComboBox {
+            //         id:                 selfIDTypeCombo
+            //         label:              qsTr("Broadcast Message")
+            //         fact:               _fact
+            //         indexModel:         false
+            //         visible:            _fact.visible
+            //         enabled:            sendSelfIDSlider._fact.rawValue
+            //         Layout.fillWidth:   true
 
-                    property Fact _fact: remoteIDSettings.selfIDType
-                }
+            //         property Fact _fact: remoteIDSettings.selfIDType
+            //     }
 
-                LabelledFactTextField {
-                    label:                      _fact.shortDescription
-                    fact:                       _fact
-                    visible:                    _fact.visible
-                    enabled:                     sendSelfIDSlider._fact.rawValue
-                    textField.maximumLength:    23
-                    Layout.fillWidth:           true
-                    textFieldPreferredWidth:    textFieldWidth
+            //     LabelledFactTextField {
+            //         label:                      _fact.shortDescription
+            //         fact:                       _fact
+            //         visible:                    _fact.visible
+            //         enabled:                     sendSelfIDSlider._fact.rawValue
+            //         textField.maximumLength:    23
+            //         Layout.fillWidth:           true
+            //         textFieldPreferredWidth:    textFieldWidth
 
-                    property Fact _fact: remoteIDSettings.selfIDFree
-                }
+            //         property Fact _fact: remoteIDSettings.selfIDFree
+            //     }
 
-                LabelledFactTextField {
-                    label:                      _fact.shortDescription
-                    fact:                       _fact
-                    visible:                    _fact.visible
-                    enabled:                    sendSelfIDSlider._fact.rawValue
-                    textField.maximumLength:    23
-                    Layout.fillWidth:           true
-                    textFieldPreferredWidth:    textFieldWidth
+            //     LabelledFactTextField {
+            //         label:                      _fact.shortDescription
+            //         fact:                       _fact
+            //         visible:                    _fact.visible
+            //         enabled:                    sendSelfIDSlider._fact.rawValue
+            //         textField.maximumLength:    23
+            //         Layout.fillWidth:           true
+            //         textFieldPreferredWidth:    textFieldWidth
 
-                    property Fact _fact: remoteIDSettings.selfIDExtended
-                }
+            //         property Fact _fact: remoteIDSettings.selfIDExtended
+            //     }
 
-                LabelledFactTextField {
-                    label:                      _fact.shortDescription
-                    fact:                       _fact
-                    visible:                    _fact.visible
-                    textField.maximumLength:    23
-                    Layout.fillWidth:           true
-                    textFieldPreferredWidth:    textFieldWidth
+            //     LabelledFactTextField {
+            //         label:                      _fact.shortDescription
+            //         fact:                       _fact
+            //         visible:                    _fact.visible
+            //         textField.maximumLength:    23
+            //         Layout.fillWidth:           true
+            //         textFieldPreferredWidth:    textFieldWidth
 
-                    property Fact _fact: remoteIDSettings.selfIDEmergency
-                }
-            }
+            //         property Fact _fact: remoteIDSettings.selfIDEmergency
+            //     }
+            // }
         }
 
         ColumnLayout {
-            spacing:            ScreenTools.defaultFontPixelHeight / 2
-            Layout.alignment:   Qt.AlignTop
+            spacing:            ScreenTools.defaultFontPixelHeight * 1
+            Layout.alignment: Qt.AlignTop; Layout.fillWidth: true
             SettingsGroupLayout {
                 heading:            qsTr("GroundStation Location")
                 Layout.fillWidth:   true
@@ -595,6 +598,71 @@ SettingsPage {
                         Layout.preferredWidth:  _valueFieldWidth
                         fact:                   QGroundControl.settingsManager.autoConnectSettings.nmeaUdpPort
                     }
+                }
+            }
+
+
+            SettingsGroupLayout {
+                heading:                qsTr("Self ID")
+                headingDescription:     qsTr("If an emergency is declared, Emergency Text will be broadcast even if Broadcast setting is not enabled.")
+                Layout.fillWidth:       true
+                Layout.preferredWidth:  textLabelWidth
+
+                FactCheckBoxSlider {
+                    id:                 sendSelfIDSlider
+                    text:               qsTr("Broadcast")
+                    fact:               _fact
+                    visible:            _fact.visible
+                    Layout.fillWidth:   true
+
+                    property Fact _fact: remoteIDSettings.sendSelfID
+                }
+
+                LabelledFactComboBox {
+                    id:                 selfIDTypeCombo
+                    label:              qsTr("Broadcast Message")
+                    fact:               _fact
+                    indexModel:         false
+                    visible:            _fact.visible
+                    enabled:            sendSelfIDSlider._fact.rawValue
+                    Layout.fillWidth:   true
+
+                    property Fact _fact: remoteIDSettings.selfIDType
+                }
+
+                LabelledFactTextField {
+                    label:                      _fact.shortDescription
+                    fact:                       _fact
+                    visible:                    _fact.visible
+                    enabled:                     sendSelfIDSlider._fact.rawValue
+                    textField.maximumLength:    23
+                    Layout.fillWidth:           true
+                    textFieldPreferredWidth:    textFieldWidth
+
+                    property Fact _fact: remoteIDSettings.selfIDFree
+                }
+
+                LabelledFactTextField {
+                    label:                      _fact.shortDescription
+                    fact:                       _fact
+                    visible:                    _fact.visible
+                    enabled:                    sendSelfIDSlider._fact.rawValue
+                    textField.maximumLength:    23
+                    Layout.fillWidth:           true
+                    textFieldPreferredWidth:    textFieldWidth
+
+                    property Fact _fact: remoteIDSettings.selfIDExtended
+                }
+
+                LabelledFactTextField {
+                    label:                      _fact.shortDescription
+                    fact:                       _fact
+                    visible:                    _fact.visible
+                    textField.maximumLength:    23
+                    Layout.fillWidth:           true
+                    textFieldPreferredWidth:    textFieldWidth
+
+                    property Fact _fact: remoteIDSettings.selfIDEmergency
                 }
             }
 

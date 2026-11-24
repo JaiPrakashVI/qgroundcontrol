@@ -22,6 +22,7 @@ import QGroundControl.MultiVehicleManager
 import QGroundControl.Palette
 
 SettingsPage {
+    id: page
     property var    _settingsManager:           QGroundControl.settingsManager
     property var    _mavlinkSettings:           _settingsManager.mavlinkSettings
     property var    _appSettings:               _settingsManager.appSettings
@@ -32,7 +33,19 @@ SettingsPage {
     property bool   _showAPMStreamRates:        QGroundControl.apmFirmwareSupported && _settingsManager.apmMavlinkStreamRateSettings.visible && _isAPM
     property var    _apmStartMavlinkStreams:    _mavlinkSettings.apmStartMavlinkStreams
 
+    // Cards in 2 columns on wide Application Settings (same as Fly View)
+    GridLayout {
+        id:                     mavlinkCardGrid
+        Layout.fillWidth:       true
+        readonly property bool twoCol: (typeof mainWindow !== "undefined") && mainWindow.settingsPageOpen && page.width - 48 >= ScreenTools.defaultFontPixelWidth * 110
+        Layout.preferredWidth:  twoCol ? Math.min(page.width - 48, ScreenTools.defaultFontPixelWidth * 200) : -1
+        columns:                twoCol ? 2 : 1
+        uniformCellWidths:      true
+        columnSpacing:          ScreenTools.defaultFontPixelWidth * 2
+        rowSpacing:             ScreenTools.defaultFontPixelHeight
+
     SettingsGroupLayout {
+        Layout.alignment: Qt.AlignTop
         Layout.fillWidth:   true
         heading:            qsTr("Ground Station")
 
@@ -51,6 +64,7 @@ SettingsPage {
 
     SettingsGroupLayout {
         id:                 mavlink2SigningGroup
+        Layout.alignment:   Qt.AlignTop
         Layout.fillWidth:   true
         heading:            qsTr("MAVLink 2 Signing")
         headingDescription: qsTr("Signing keys should only be sent to the vehicle over secure links.")
@@ -93,6 +107,7 @@ SettingsPage {
     }
 
     SettingsGroupLayout {
+        Layout.alignment:   Qt.AlignTop
         Layout.fillWidth:   true
         heading:            qsTr("MAVLink Forwarding")
 
@@ -114,6 +129,7 @@ SettingsPage {
     }
 
     SettingsGroupLayout {
+        Layout.alignment:   Qt.AlignTop
         Layout.fillWidth:   true
         heading:            qsTr("Logging")
         visible:            !_disableAllDataPersistence
@@ -145,6 +161,7 @@ SettingsPage {
     }
 
     SettingsGroupLayout {
+        Layout.alignment:   Qt.AlignTop
         Layout.fillWidth:   true
         heading:            qsTr("Stream Rates (ArduPilot Only)")
         visible:            _showAPMStreamRates
@@ -215,8 +232,10 @@ SettingsPage {
     }
 
     SettingsGroupLayout {
+        Layout.alignment:   Qt.AlignTop
         Layout.fillWidth:   true
         heading:            qsTr("Link Status (Current Vehicle))")
+        Layout.columnSpan:  mavlinkCardGrid.twoCol ? 2 : 1
 
         LabelledLabel {
             Layout.fillWidth:   true
@@ -247,5 +266,7 @@ SettingsPage {
             label:              qsTr("Signing:")
             labelText:          _activeVehicle ? (_activeVehicle.mavlinkSigning ? "On" : "Off") : _notConnectedStr
         }
+    }
+
     }
 }

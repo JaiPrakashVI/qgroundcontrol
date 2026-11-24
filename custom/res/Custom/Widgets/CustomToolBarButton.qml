@@ -36,15 +36,12 @@ Button {
             width:                  1
         }
         QGCColoredImage {
-            id:                     _icon
-            height:                 ScreenTools.defaultFontPixelHeight
-            width:                  height
-            sourceSize.height:      parent.height
-            fillMode:               Image.PreserveAspectFit
-            color:                  qgcPal.buttonText
-            source:                 button.icon.source
-            anchors.verticalCenter: parent.verticalCenter
-        }
+            source: modelData.iconSource
+            color: _cText
+            width: Math.max(20, Math.round(24 * _root._u))
+            height: width
+            fillMode: Image.PreserveAspectFit
+            }
         Label {
             id:                     _label
             visible:                text !== ""

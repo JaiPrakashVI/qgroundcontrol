@@ -1,13 +1,3 @@
-/****************************************************************************
- *
- * (c) 2009-2020 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
- *
- * QGroundControl is licensed according to the terms in the file
- * COPYING.md in the root of the source code directory.
- *
- ****************************************************************************/
-
-
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
@@ -30,9 +20,16 @@ SettingsPage {
     property Fact   _userBrandImageIndoor:      _brandImageSettings.userBrandImageIndoor
     property Fact   _userBrandImageOutdoor:     _brandImageSettings.userBrandImageOutdoor
     property Fact   _appSavePath:               _appSettings.savePath
-    // card width follows the window: 80% of the page, never below 50 or above 110 character-widths
+
     readonly property real _cardW: Math.max(ScreenTools.defaultFontPixelWidth * 50,
-                                            Math.min(page.width * 0.8, ScreenTools.defaultFontPixelWidth * 110))
+                                            Math.min(page.width - 48, ScreenTools.defaultFontPixelWidth * 130))
+    // two columns only when the page has room for two cards side by side
+    readonly property bool _wide:  page.width - 48 >= ScreenTools.defaultFontPixelWidth * 110
+    readonly property real _gridW: _wide ? Math.min(page.width - 48, ScreenTools.defaultFontPixelWidth * 200)
+                                         : page._cardW
+    // every row in every card gets at least this height, so all rows match
+    readonly property real _rowH: ScreenTools.defaultFontPixelHeight * 1.4
+
 
     // Settings card: gray outer box (heading) + inner box (rows)
     component AppCard: Rectangle {
@@ -58,6 +55,7 @@ SettingsPage {
         color:              _cOuter
         border.color:       _cEdge
         border.width:       1
+        Layout.alignment:   Qt.AlignTop
 
         ColumnLayout {
             id:                 outerLayout
@@ -140,31 +138,132 @@ SettingsPage {
         }
     }
 
+    // Segmented option buttons: all options in one rounded bar, highlight slides to the chosen one
+
+    component SegFact: Rectangle {
+            id: seg
+            property Fact fact: null
+            readonly property var   _names: fact ? fact.enumStrings : []
+            readonly property int   _count: _names ? _names.length : 0
+            readonly property int   _cur:   fact ? fact.enumIndex : -1
+            readonly property bool  _light: QGroundControl.globalPalette.globalTheme === QGCPalette.Light
+            readonly property color _track: _light ? "#FFFFFF" : "#202020"   // same as the inner box
+            readonly property color _edge:  _light ? "#E0E0E0" : "#606060"   // same as the pill border
+            readonly property color _sel:   _light ? "#EBEBEB" : "#404040"   // same gray as the pill fill
+            readonly property color _txtOn: _light ? "#1F2328" : "#E6EAF0"
+            readonly property color _txtOff:_light ? "#6B7280" : "#A0A0A0"
+            readonly property real  _pad:   4                                // gap between bar edge and highlight
+
+            implicitWidth:  segRow.implicitWidth + _pad * 2
+            implicitHeight: ScreenTools.defaultFontPixelHeight * 1.6
+            radius:         10
+            color:          _track
+            border.color:   _edge
+            border.width:   1
+
+            // sliding highlight
+            Rectangle {
+                visible:    seg._cur >= 0 && seg._count > 0
+                y:          seg._pad
+                height:     seg.height - seg._pad * 2
+                width:      segRow.width / Math.max(1, seg._count)
+                x:          segRow.x + Math.max(0, seg._cur) * width
+                radius:     6
+                color:      seg._sel
+                Behavior on x     { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                Behavior on width { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+            }
+
+            RowLayout {
+                id:                 segRow
+                x:                  seg._pad
+                y:                  seg._pad
+                height:             seg.height - seg._pad * 2
+                spacing:            0
+                uniformCellSizes:   true
+                Repeater {
+                    model: seg._names
+                    Item {
+                        Layout.fillWidth:   true
+                        Layout.fillHeight:  true
+                        implicitWidth:      segLabel.implicitWidth + ScreenTools.defaultFontPixelWidth * 5
+                        QGCLabel {
+                            id:             segLabel
+                            anchors.centerIn: parent
+                            text:           modelData
+                            color:          index === seg._cur ? seg._txtOn : seg._txtOff
+                            font.bold:      index === seg._cur
+                        }
+                        MouseArea {
+                            anchors.fill:   parent
+                            cursorShape:    Qt.PointingHandCursor
+                            onClicked:      seg.fact.enumIndex = index
+                        }
+                    }
+                }
+            }
+        }
+
+    // One settings row: label on the left, option buttons on the right.
+    // If the row is too narrow for the buttons, it falls back to the normal dropdown.
+    component OptionRow: RowLayout {
+        id: optRow
+        property string label:  ""
+        property Fact   fact:   null
+        readonly property bool _fits: width >= rowLabel.implicitWidth + segCtl.implicitWidth + spacing
+        Layout.minimumHeight:   ScreenTools.defaultFontPixelHeight * 1.6
+        Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 1.6
+        Layout.fillWidth:   true
+        spacing:            ScreenTools.defaultFontPixelWidth * 2
+        visible:            fact ? fact.visible : true
+
+        QGCLabel {
+            id:                 rowLabel
+            Layout.fillWidth:   true
+            text:               optRow.label
+        }
+        SegFact {
+            id:         segCtl
+            visible:    optRow._fits
+            fact:       optRow.fact
+        }
+        FactComboBox {
+            visible:    !optRow._fits
+            fact:       optRow.fact
+            indexModel: false
+        }
+    }
 
 
-    Item { Layout.preferredHeight: ScreenTools.defaultFontPixelHeight * 1.5 }
+    GridLayout {
+        id:                     cardGrid
+        Layout.fillWidth:       true
+        Layout.preferredWidth:  page._gridW
+        columns:                page._wide ? 2 : 1
+        columnSpacing:          ScreenTools.defaultFontPixelWidth * 2
+        rowSpacing:             ScreenTools.defaultFontPixelHeight
 
     AppCard {
-        Layout.fillWidth:   true
-        targetWidth:        page._cardW
-        heading:            qsTr("General")
+        Layout.fillWidth:       true
+        Layout.preferredWidth:  1
+        heading:                qsTr("General")
 
         LabelledFactComboBox {
             label:      qsTr("Language")
+            Layout.minimumHeight: page._rowH
             fact:       _appSettings.qLocaleLanguage
             indexModel: false
             visible:    _appSettings.qLocaleLanguage.visible
         }
 
-        LabelledFactComboBox {
-            label:      qsTr("Color Scheme")
-            fact:       _appSettings.indoorPalette
-            indexModel: false
-            visible:    _appSettings.indoorPalette.visible
+        OptionRow {
+            label:  qsTr("Color Scheme")
+            fact:   _appSettings.indoorPalette
         }
 
         LabelledFactComboBox {
             label:       qsTr("Stream GCS Position")
+            Layout.preferredHeight: page._rowH
             fact:       _appSettings.followTarget
             indexModel: false
             visible:    _appSettings.followTarget.visible
@@ -172,6 +271,7 @@ SettingsPage {
 
         FactCheckBoxSlider {
             Layout.fillWidth: true
+            Layout.preferredHeight: page._rowH
             text:           qsTr("Mute all audio output")
             fact:       _audioMuted
             visible:    _audioMuted.visible
@@ -180,6 +280,7 @@ SettingsPage {
 
         FactCheckBoxSlider {
             Layout.fillWidth: true
+            Layout.minimumHeight: page._rowH
             text:       qsTr("Save application data to SD Card")
             fact:       _androidSaveToSDCard
             visible:    _androidSaveToSDCard.visible
@@ -188,6 +289,7 @@ SettingsPage {
 
         QGCCheckBoxSlider {
             Layout.fillWidth: true
+            Layout.minimumHeight: page._rowH
             text:       qsTr("Clear all settings on next start")
             checked:    false
             onClicked: {
@@ -200,49 +302,124 @@ SettingsPage {
         }
 
         RowLayout {
-            Layout.fillWidth:   true
-            spacing:            ScreenTools.defaultFontPixelWidth * 2
-            visible:            _appFontPointSize.visible
+            Layout.fillWidth:       true
+            Layout.minimumHeight:   page._rowH
+            spacing:                ScreenTools.defaultFontPixelWidth * 2
+            visible:                _appFontPointSize.visible
 
-            QGCLabel { 
+            QGCLabel {
                 Layout.fillWidth:   true
-                text:               qsTr("UI Scaling") 
+                text:               qsTr("UI Scaling")
             }
 
-            RowLayout {
-                spacing: ScreenTools.defaultFontPixelWidth * 2
+            Rectangle {
+                id:             stepper
+                readonly property bool  _light: QGroundControl.globalPalette.globalTheme === QGCPalette.Light
+                readonly property color _hover: _light ? "#EBEBEB" : "#404040"
+                implicitWidth:  stepRow.implicitWidth + 8
+                implicitHeight: ScreenTools.defaultFontPixelHeight * 1.6
+                radius:         8
+                color:          _light ? "#FFFFFF" : "#202020"
+                border.color:   _light ? "#E0E0E0" : "#606060"
+                border.width:   1
 
-                QGCButton {
-                    Layout.preferredWidth:  height
-                    height:                 baseFontEdit.height * 1.5
-                    text:                   "-"
-                    onClicked: {
-                        if (_appFontPointSize.value > _appFontPointSize.min) {
-                            _appFontPointSize.value = _appFontPointSize.value - 1
+                RowLayout {
+                    id:                 stepRow
+                    anchors.centerIn:   parent
+                    spacing:            0
+
+                    Rectangle {
+                        Layout.preferredWidth:  stepper.implicitHeight - 8
+                        Layout.preferredHeight: stepper.implicitHeight - 8
+                        radius:                 6
+                        color:                  minusMouse.containsMouse ? stepper._hover : "transparent"
+                        QGCLabel { anchors.centerIn: parent; text: "-" }
+                        MouseArea {
+                            id:             minusMouse
+                            anchors.fill:   parent
+                            hoverEnabled:   true
+                            cursorShape:    Qt.PointingHandCursor
+                            onClicked: {
+                                if (_appFontPointSize.value > _appFontPointSize.min) {
+                                    _appFontPointSize.value = _appFontPointSize.value - 1
+                                }
+                            }
                         }
                     }
-                }
 
-                QGCLabel {
-                    id:                     baseFontEdit
-                    width:                  ScreenTools.defaultFontPixelWidth * 6
-                    text:                   (QGroundControl.settingsManager.appSettings.appFontPointSize.value / ScreenTools.platformFontPointSize * 100).toFixed(0) + "%"
-                }
+                    QGCLabel {
+                        id:                         baseFontEdit
+                        Layout.preferredWidth:      ScreenTools.defaultFontPixelWidth * 7
+                        horizontalAlignment:        Text.AlignHCenter
+                        text:                       (QGroundControl.settingsManager.appSettings.appFontPointSize.value / ScreenTools.platformFontPointSize * 100).toFixed(0) + "%"
+                    }
 
-                QGCButton {
-                    Layout.preferredWidth:  height
-                    height:                 baseFontEdit.height * 1.5
-                    text:                   "+"
-                    onClicked: {
-                        if (_appFontPointSize.value < _appFontPointSize.max) {
-                            _appFontPointSize.value = _appFontPointSize.value + 1
+                    Rectangle {
+                        Layout.preferredWidth:  stepper.implicitHeight - 8
+                        Layout.preferredHeight: stepper.implicitHeight - 8
+                        radius:                 6
+                        color:                  plusMouse.containsMouse ? stepper._hover : "transparent"
+                        QGCLabel { anchors.centerIn: parent; text: "+" }
+                        MouseArea {
+                            id:             plusMouse
+                            anchors.fill:   parent
+                            hoverEnabled:   true
+                            cursorShape:    Qt.PointingHandCursor
+                            onClicked: {
+                                if (_appFontPointSize.value < _appFontPointSize.max) {
+                                    _appFontPointSize.value = _appFontPointSize.value + 1
+                                }
+                            }
                         }
                     }
                 }
             }
         }
 
+
+    }
+
+    AppCard {
+        Layout.fillWidth:   true
+        Layout.preferredWidth: 1
+        heading:            qsTr("Units")
+        visible:            QGroundControl.settingsManager.unitsSettings.visible
+
+        OptionRow {
+            label:  QGroundControl.settingsManager.unitsSettings.horizontalDistanceUnits.shortDescription
+            fact:   QGroundControl.settingsManager.unitsSettings.horizontalDistanceUnits
+        }
+        OptionRow {
+            label:  QGroundControl.settingsManager.unitsSettings.verticalDistanceUnits.shortDescription
+            fact:   QGroundControl.settingsManager.unitsSettings.verticalDistanceUnits
+        }
+        LabelledFactComboBox {
+            label:      QGroundControl.settingsManager.unitsSettings.areaUnits.shortDescription
+            Layout.minimumHeight: page._rowH; Layout.preferredHeight: page._rowH
+            fact:       QGroundControl.settingsManager.unitsSettings.areaUnits
+            indexModel: false
+        }
+        LabelledFactComboBox {
+            label:      QGroundControl.settingsManager.unitsSettings.speedUnits.shortDescription
+            Layout.minimumHeight: page._rowH; Layout.preferredHeight: page._rowH
+            fact:       QGroundControl.settingsManager.unitsSettings.speedUnits
+            indexModel: false
+        }
+        OptionRow {
+            label:  QGroundControl.settingsManager.unitsSettings.temperatureUnits.shortDescription
+            fact:   QGroundControl.settingsManager.unitsSettings.temperatureUnits
+        }
+    }
+
+    AppCard {
+        Layout.fillWidth:       true
+        Layout.preferredWidth:  1
+        Layout.columnSpan:      cardGrid.columns
+        heading:                qsTr("Storage")
+        visible:                _appSavePath.visible && !ScreenTools.isMobile
+
         RowLayout {
+            Layout.minimumHeight:   page._rowH
             Layout.fillWidth:   true
             spacing:            ScreenTools.defaultFontPixelWidth * 2
             visible:            _appSavePath.visible && !ScreenTools.isMobile
@@ -252,7 +429,7 @@ SettingsPage {
                 spacing:            0
 
                 QGCLabel { text: qsTr("Application Load/Save Path") }
-                QGCLabel { 
+                QGCLabel {
                     Layout.fillWidth:   true
                     font.pointSize:     ScreenTools.smallFontPointSize
                     text:               _appSavePath.rawValue === "" ? qsTr("<default location>") : _appSavePath.value
@@ -272,110 +449,97 @@ SettingsPage {
                 }
             }
         }
+
     }
 
-    AppCard {
-        Layout.fillWidth:   true
-        targetWidth:        page._cardW
-        heading:            qsTr("Units")
-        visible:            QGroundControl.settingsManager.unitsSettings.visible
+    // AppCard {
+    //     Layout.fillWidth:       true
+    //     Layout.preferredWidth:  1
+    //     Layout.columnSpan:      cardGrid.columns
+    //     heading:                qsTr("Brand Image")
 
-        Repeater {
-            model: [ QGroundControl.settingsManager.unitsSettings.horizontalDistanceUnits, QGroundControl.settingsManager.unitsSettings.verticalDistanceUnits, QGroundControl.settingsManager.unitsSettings.areaUnits, QGroundControl.settingsManager.unitsSettings.speedUnits, QGroundControl.settingsManager.unitsSettings.temperatureUnits ]
+    //     RowLayout {
+    //         Layout.fillWidth:   true
+    //         spacing:            ScreenTools.defaultFontPixelWidth * 2
+    //         visible:            _userBrandImageIndoor.visible
 
-            LabelledFactComboBox {
-                label:                  modelData.shortDescription
-                fact:                   modelData
-                indexModel:             false
-            }
-        }
-    }
+    //         ColumnLayout {
+    //             Layout.fillWidth:   true
+    //             spacing:            0
 
-    AppCard {
-        Layout.fillWidth:   true
-        targetWidth:        page._cardW
-        heading:            qsTr("Brand Image")
-        visible:            _brandImageSettings.visible && !ScreenTools.isMobile
-        
-        RowLayout {
-            Layout.fillWidth:   true
-            spacing:            ScreenTools.defaultFontPixelWidth * 2
-            visible:            _userBrandImageIndoor.visible
+    //             QGCLabel {
+    //                 Layout.fillWidth:   true
+    //                 text:               qsTr("Indoor Image")
+    //             }
+    //             QGCLabel {
+    //                 Layout.fillWidth:   true
+    //                 font.pointSize:     ScreenTools.smallFontPointSize
+    //                 text:               _userBrandImageIndoor.valueString.replace("file:///", "")
+    //                 elide:              Text.ElideMiddle
+    //                 visible:            _userBrandImageIndoor.valueString.length > 0
+    //             }
+    //         }
 
-            ColumnLayout {
-                Layout.fillWidth:   true
-                spacing:            0
+    //         QGCButton {
+    //             text:       qsTr("Browse")
+    //             onClicked:  userBrandImageIndoorBrowseDialog.openForLoad()
 
-                QGCLabel { 
-                    Layout.fillWidth:   true
-                    text:               qsTr("Indoor Image") 
-                }
-                QGCLabel { 
-                    Layout.fillWidth:   true
-                    font.pointSize:     ScreenTools.smallFontPointSize
-                    text:               _userBrandImageIndoor.valueString.replace("file:///", "") 
-                    elide:              Text.ElideMiddle
-                    visible:            _userBrandImageIndoor.valueString.length > 0
-                }
-            }
+    //             QGCFileDialog {
+    //                 id:                 userBrandImageIndoorBrowseDialog
+    //                 title:              qsTr("Choose custom brand image file")
+    //                 folder:             _userBrandImageIndoor.rawValue.replace("file:///", "")
+    //                 selectFolder:       false
+    //                 onAcceptedForLoad:  (file) => _userBrandImageIndoor.rawValue = "file:///" + file
+    //             }
+    //         }
+    //     }
 
-            QGCButton {
-                text:       qsTr("Browse")
-                onClicked:  userBrandImageIndoorBrowseDialog.openForLoad()
+    //     RowLayout {
+    //         Layout.fillWidth:   true
+    //         spacing:            ScreenTools.defaultFontPixelWidth * 2
+    //         visible:            _userBrandImageOutdoor.visible
 
-                QGCFileDialog {
-                    id:                 userBrandImageIndoorBrowseDialog
-                    title:              qsTr("Choose custom brand image file")
-                    folder:             _userBrandImageIndoor.rawValue.replace("file:///", "")
-                    selectFolder:       false
-                    onAcceptedForLoad:  (file) => _userBrandImageIndoor.rawValue = "file:///" + file
-                }
-            }
-        }
+    //         ColumnLayout {
+    //             Layout.fillWidth:   true
+    //             spacing:            0
 
-        RowLayout {
-            Layout.fillWidth:   true
-            spacing:            ScreenTools.defaultFontPixelWidth * 2
-            visible:            _userBrandImageOutdoor.visible
+    //             QGCLabel {
+    //                 Layout.fillWidth:   true
+    //                 text:               qsTr("Outdoor Image")
+    //             }
+    //             QGCLabel {
+    //                 Layout.fillWidth:   true
+    //                 font.pointSize:     ScreenTools.smallFontPointSize
+    //                 text:               _userBrandImageOutdoor.valueString.replace("file:///", "")
+    //                 elide:              Text.ElideMiddle
+    //                 visible:            _userBrandImageOutdoor.valueString.length > 0
+    //             }
+    //         }
 
-            ColumnLayout {
-                Layout.fillWidth:   true
-                spacing:            0
+    //         QGCButton {
+    //             text:       qsTr("Browse")
+    //             onClicked:  userBrandImageOutdoorBrowseDialog.openForLoad()
 
-                QGCLabel { 
-                    Layout.fillWidth:   true
-                    text:               qsTr("Outdoor Image") 
-                }
-                QGCLabel { 
-                    Layout.fillWidth:   true
-                    font.pointSize:     ScreenTools.smallFontPointSize
-                    text:               _userBrandImageOutdoor.valueString.replace("file:///", "") 
-                    elide:              Text.ElideMiddle
-                    visible:            _userBrandImageOutdoor.valueString.length > 0
-                }
-            }
+    //             QGCFileDialog {
+    //                 id:                 userBrandImageOutdoorBrowseDialog
+    //                 title:              qsTr("Choose custom brand image file")
+    //                 folder:             _userBrandImageOutdoor.rawValue.replace("file:///", "")
+    //                 selectFolder:       false
+    //                 onAcceptedForLoad:  (file) => _userBrandImageOutdoor.rawValue = "file:///" + file
+    //             }
+    //         }
+    //     }
 
-            QGCButton {
-                text:       qsTr("Browse")
-                onClicked:  userBrandImageOutdoorBrowseDialog.openForLoad()
+    //     LabelledButton {
+    //         label:      qsTr("Reset Images")
+    //         buttonText: qsTr("Reset")
+    //         onClicked:  {
+    //             _userBrandImageIndoor.rawValue = ""
+    //             _userBrandImageOutdoor.rawValue = ""
+    //         }
+    //     }
 
-                QGCFileDialog {
-                    id:                 userBrandImageOutdoorBrowseDialog
-                    title:              qsTr("Choose custom brand image file")
-                    folder:             _userBrandImageOutdoor.rawValue.replace("file:///", "")
-                    selectFolder:       false
-                    onAcceptedForLoad:  (file) => _userBrandImageOutdoor.rawValue = "file:///" + file
-                }
-            }
-        }
+    // }
 
-        LabelledButton {
-            label:      qsTr("Reset Images")
-            buttonText: qsTr("Reset")
-            onClicked:  {
-                _userBrandImageIndoor.rawValue = ""
-                _userBrandImageOutdoor.rawValue = ""
-            }
-        }
     }
 }
