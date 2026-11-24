@@ -23,6 +23,7 @@ import QGroundControl.Palette
 import QGroundControl.Controllers
 
 SettingsPage {
+    id:page
     property var    _settingsManager:                       QGroundControl.settingsManager
     property var    _flyViewSettings:                       _settingsManager.flyViewSettings
     property var    _mavlinkActionsSettings:                _settingsManager.mavlinkActionsSettings
@@ -51,9 +52,19 @@ SettingsPage {
         return fileModel
     }
 
+    // Fly View cards in 2 columns on wide Application Settings
+    GridLayout {
+        id:                     flyCardGrid
+        Layout.fillWidth:       true
+        readonly property bool twoCol: (typeof mainWindow !== "undefined") && mainWindow.settingsPageOpen && page.width - 48 >= ScreenTools.defaultFontPixelWidth * 110
+        Layout.preferredWidth:  twoCol ? Math.min(page.width - 48, ScreenTools.defaultFontPixelWidth * 200) : -1
+        columns:                twoCol ? 2 : 1
+        columnSpacing:          ScreenTools.defaultFontPixelWidth * 2
+        rowSpacing:             ScreenTools.defaultFontPixelHeight
     SettingsGroupLayout {
-        Layout.fillWidth:   true
-        heading:            qsTr("General")
+
+            Layout.fillWidth:   true
+            heading:            qsTr("General")
 
         FactCheckBoxSlider {
             id:                 useCheckList
@@ -115,6 +126,7 @@ SettingsPage {
     }
 
     SettingsGroupLayout {
+        Layout.alignment:   Qt.AlignTop
         Layout.fillWidth:   true
         heading:            qsTr("Guided Commands")
         visible:            _guidedMinimumAltitude.visible || _guidedMaximumAltitude.visible ||
@@ -157,38 +169,38 @@ SettingsPage {
         }
     }
 
-    SettingsGroupLayout {
-        Layout.fillWidth:       true
-        Layout.preferredWidth:  ScreenTools.defaultFontPixelWidth * 35
-        heading:                qsTr("MAVLink Actions")
-        headingDescription:     qsTr("Action JSON files should be created in the '%1' folder.").arg(QGroundControl.settingsManager.appSettings.mavlinkActionsSavePath)
+    // SettingsGroupLayout {
+    //     Layout.fillWidth:       true
+    //     Layout.preferredWidth:  ScreenTools.defaultFontPixelWidth * 35
+    //     heading:                qsTr("MAVLink Actions")
+    //     headingDescription:     qsTr("Action JSON files should be created in the '%1' folder.").arg(QGroundControl.settingsManager.appSettings.mavlinkActionsSavePath)
 
-        LabelledComboBox {
-            Layout.fillWidth:   true
-            label:              qsTr("Fly View Actions")
-            model:              mavlinkActionList()
-            onActivated:        (index) => index == 0 ? _mavlinkActionsSettings.flyViewActionsFile.rawValue = "" : _mavlinkActionsSettings.flyViewActionsFile.rawValue = comboBox.currentText
-            enabled:            model.length > 1
+    //     LabelledComboBox {
+    //         Layout.fillWidth:   true
+    //         label:              qsTr("Fly View Actions")
+    //         model:              mavlinkActionList()
+    //         onActivated:        (index) => index == 0 ? _mavlinkActionsSettings.flyViewActionsFile.rawValue = "" : _mavlinkActionsSettings.flyViewActionsFile.rawValue = comboBox.currentText
+    //         enabled:            model.length > 1
 
-            Component.onCompleted: {
-                var index = comboBox.find(_mavlinkActionsSettings.flyViewActionsFile.valueString)
-                comboBox.currentIndex = index == -1 ? 0 : index
-            }
-        }
+    //         Component.onCompleted: {
+    //             var index = comboBox.find(_mavlinkActionsSettings.flyViewActionsFile.valueString)
+    //             comboBox.currentIndex = index == -1 ? 0 : index
+    //         }
+    //     }
 
-        LabelledComboBox {
-            Layout.fillWidth:   true
-            label:              qsTr("Joystick Actions")
-            model:              mavlinkActionList()
-            onActivated:        (index) => index == 0 ? _mavlinkActionsSettings.joystickActionsFile.rawValue = "" : _mavlinkActionsSettings.joystickActionsFile.rawValue = comboBox.currentText
-            enabled:            model.length > 1
+    //     LabelledComboBox {
+    //         Layout.fillWidth:   true
+    //         label:              qsTr("Joystick Actions")
+    //         model:              mavlinkActionList()
+    //         onActivated:        (index) => index == 0 ? _mavlinkActionsSettings.joystickActionsFile.rawValue = "" : _mavlinkActionsSettings.joystickActionsFile.rawValue = comboBox.currentText
+    //         enabled:            model.length > 1
 
-            Component.onCompleted: {
-                var index = comboBox.find(_mavlinkActionsSettings.joystickActionsFile.valueString)
-                comboBox.currentIndex = index == -1 ? 0 : index
-            }
-        }
-    }
+    //         Component.onCompleted: {
+    //             var index = comboBox.find(_mavlinkActionsSettings.joystickActionsFile.valueString)
+    //             comboBox.currentIndex = index == -1 ? 0 : index
+    //         }
+    //     }
+    // }
 
     SettingsGroupLayout {
         Layout.fillWidth:   true
@@ -220,6 +232,7 @@ SettingsPage {
     }
 
     SettingsGroupLayout {
+        Layout.alignment: Qt.AlignTop
         Layout.fillWidth:   true
         heading:            qsTr("Instrument Panel")
         visible:            _showAdditionalIndicatorsCompass.visible || _lockNoseUpCompass.visible
@@ -240,6 +253,41 @@ SettingsPage {
     }
 
     SettingsGroupLayout {
+        Layout.columnSpan:  flyCardGrid.twoCol ? 2 : 1
+        Layout.fillWidth:       true
+        // Layout.preferredWidth:  ScreenTools.defaultFontPixelWidth * 35
+        heading:                qsTr("MAVLink Actions")
+        headingDescription:     qsTr("Action JSON files should be created in the '%1' folder.").arg(QGroundControl.settingsManager.appSettings.mavlinkActionsSavePath)
+
+        LabelledComboBox {
+            Layout.fillWidth:   true
+            label:              qsTr("Fly View Actions")
+            model:              mavlinkActionList()
+            onActivated:        (index) => index == 0 ? _mavlinkActionsSettings.flyViewActionsFile.rawValue = "" : _mavlinkActionsSettings.flyViewActionsFile.rawValue = comboBox.currentText
+            enabled:            model.length > 1
+
+            Component.onCompleted: {
+                var index = comboBox.find(_mavlinkActionsSettings.flyViewActionsFile.valueString)
+                comboBox.currentIndex = index == -1 ? 0 : index
+            }
+        }
+
+        LabelledComboBox {
+            Layout.fillWidth:   true
+            label:              qsTr("Joystick Actions")
+            model:              mavlinkActionList()
+            onActivated:        (index) => index == 0 ? _mavlinkActionsSettings.joystickActionsFile.rawValue = "" : _mavlinkActionsSettings.joystickActionsFile.rawValue = comboBox.currentText
+            enabled:            model.length > 1
+
+            Component.onCompleted: {
+                var index = comboBox.find(_mavlinkActionsSettings.joystickActionsFile.valueString)
+                comboBox.currentIndex = index == -1 ? 0 : index
+            }
+        }
+    }
+
+    SettingsGroupLayout {
+        Layout.columnSpan:  flyCardGrid.twoCol ? 2 : 1
         Layout.fillWidth:   true
         heading:            qsTr("3D View")
         visible:            _viewer3DSettings.visible
@@ -334,5 +382,7 @@ SettingsPage {
             enabled:            _viewer3DEnabled.rawValue
             visible:            _viewer3DAltitudeBias.visible
         }
+    }
+
     }
 }

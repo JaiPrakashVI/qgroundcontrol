@@ -11,6 +11,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import QGroundControl.Controls
+import QGroundControl.Palette
 import QGroundControl.ScreenTools
 
 QGCPopupDialog {
@@ -33,8 +34,9 @@ QGCPopupDialog {
     ColumnLayout {
         QGCLabel {
             id:                     label
-            Layout.preferredWidth:  Math.max(mainWindow.width / (ScreenTools.isMobile ? 2 : 3), headerMinWidth)
+            Layout.preferredWidth:  (typeof mainWindow !== "undefined" && mainWindow.settingsPageOpen) ? Math.max(ScreenTools.defaultFontPixelWidth * 42, headerMinWidth) : Math.max(mainWindow.width / (ScreenTools.isMobile ? 2 : 3), headerMinWidth)
             wrapMode:               Text.WordWrap
+            color:                  (typeof mainWindow !== "undefined" && mainWindow.settingsPageOpen) ? (QGroundControl.globalPalette.globalTheme === QGCPalette.Light ? "#1F2328" : "#E6EAF0") : QGroundControl.globalPalette.text
         }
     }
 }

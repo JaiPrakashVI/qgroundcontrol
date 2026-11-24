@@ -19,6 +19,7 @@ import QGroundControl.Controls
 import QGroundControl.ScreenTools
 
 SettingsPage {
+    wideColumn: true
     property var    _settingsManager:            QGroundControl.settingsManager
     property var    _videoManager:              QGroundControl.videoManager
     property var    _videoSettings:             _settingsManager.videoSettings

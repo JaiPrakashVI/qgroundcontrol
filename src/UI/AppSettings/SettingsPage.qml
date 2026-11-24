@@ -26,15 +26,26 @@ Item {
 
     default property alias contentItem: mainLayout.data
 
+    // Application Settings page only: wide responsive column and a gap at the top
+    readonly property bool  _settingsStyle: (typeof mainWindow !== "undefined") && mainWindow.settingsPageOpen
+    readonly property real  _topGap:        _settingsStyle ? Math.max(24, Math.min(64, root.height * 0.06)) : 0
+    readonly property real  _colWidth:      Math.max(ScreenTools.defaultFontPixelWidth * 50,
+                                                     Math.min(root.width * 0.8, ScreenTools.defaultFontPixelWidth * 110))
+    // Set true on a page (Plan settings) to use the full width of the settings area
+    property bool   wideColumn:     false
+
     QGCFlickable {
         anchors.fill:   parent
         contentWidth:   mainLayout.width
-        contentHeight:  mainLayout.height
+        contentHeight:  mainLayout.height + root._topGap * 2
 
         ColumnLayout {
             id:         mainLayout
             x:          Math.max(0, root.width / 2 - width / 2)
-            width:      Math.max(implicitWidth, ScreenTools.defaultFontPixelWidth * 50)
+            y:          root._topGap
+            width:      root._settingsStyle ? (root.wideColumn ? Math.min(root.width - 48, ScreenTools.defaultFontPixelWidth * 200)
+                                                                : Math.max(root._colWidth, implicitWidth))
+                                            : Math.max(implicitWidth, ScreenTools.defaultFontPixelWidth * 50)
             spacing:    ScreenTools.defaultFontPixelHeight
         }
     }

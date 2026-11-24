@@ -96,7 +96,7 @@ Item {
 
     Item {
         id:                 mapHolder
-        anchors.top:        toolbar.bottom
+        anchors.top:        parent.top
         anchors.bottom:     parent.bottom
         anchors.left:       parent.left
         anchors.right:      parent.right
@@ -105,7 +105,7 @@ Item {
             anchors.leftMargin:   _root._customLeftInset
             anchors.rightMargin:  _root._customRightInset
             anchors.bottomMargin: _root._customBottomInset
-            // anchors.topMargin: _root._customTopInset
+            anchors.topMargin: _root._customTopInset
 
         FlyViewMap {
             id:                     mapControl

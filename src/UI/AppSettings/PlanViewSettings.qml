@@ -20,6 +20,7 @@ import QGroundControl.Controls
 SettingsPage {
     property var _settingsManager:  QGroundControl.settingsManager
     property var _planViewSettings: QGroundControl.settingsManager.planViewSettings
+    wideColumn: true
 
     SettingsGroupLayout {
         Layout.fillWidth: true

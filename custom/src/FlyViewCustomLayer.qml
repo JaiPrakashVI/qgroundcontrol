@@ -34,19 +34,21 @@ Item {
     readonly property int _fsL:  Math.max(13, Math.round(15 * _u))
     readonly property int _fsXL: Math.max(15, Math.round(18 * _u))
 
-    // Colors
-    readonly property color _cPanel:  "#111E2B"
-    readonly property color _cCard:   "#0D151F"
-    readonly property color _cBorder: "#263649"
-    readonly property color _cHover:  "#1A2A3A"
-    readonly property color _cLine:   "#1E2C3C"
-    readonly property color _cText:   "#F1F5F9"
-    readonly property color _cSoft:   "#B3C0D0"
-    readonly property color _cMuted:  "#8191A5"
-    readonly property color _cAccent: "#4DA3FF"
-    readonly property color _cGood:   "#27BF89"
-    readonly property color _cWarn:   "#F7B24A"
-    readonly property color _cBad:    "#E1544C"
+    // Colors (follow Color Scheme: Indoor = dark, Outdoor = light; same palette as Application Settings)
+    readonly property bool  _light:   qgcPal.globalTheme === QGCPalette.Light
+    readonly property color _cPanel:  _light ? "#ECEDF0" : "#404040"   // outer cards (sidebar color)
+    readonly property color _cCard:   _light ? "#FFFFFF" : "#202020"   // top bar, footer, tiles (content color)
+    readonly property color _cBorder: _light ? "#D6D7DC" : "#606060"
+    readonly property color _cHover:  _light ? "#E0E1E5" : "#222D3A"  // _cItemHover
+    readonly property color _cSel:    _light ? "#D1D2D8" : "#2E3B4B"   // _cItemSelected
+    readonly property color _cLine:   _light ? "#CDCED4" : "#404040"
+    readonly property color _cText:   _light ? "#1F2328" : "#E6EAF0"   // _cItemText
+    readonly property color _cSoft:   _light ? "#4A5058" : "#C8CCD2"
+    readonly property color _cMuted:  _light ? "#6B7280" : "#A0A0A0"
+    readonly property color _cAccent: _light ? "#1F7AFF" : "#4DA3FF"
+    readonly property color _cGood:   _light ? "#1E9E6E" : "#27BF89"
+    readonly property color _cWarn:   _light ? "#C9821A" : "#F7B24A"
+    readonly property color _cBad:    _light ? "#D0342C" : "#E1544C"
 
     // Layout sizes
     readonly property real _sidebarW_Collapsed: Math.max(56,  Math.round(70 * _u))
@@ -61,7 +63,7 @@ Item {
 
     readonly property real customLeftInset: 0
     readonly property real customRightInset: 0
-    readonly property real customBottomInset: _footerbaseH
+    readonly property real customBottomInset: _footerH
     readonly property real customTopInset: topNavbar.height
 
     property var   _activeVehicle:      QGroundControl.multiVehicleManager.activeVehicle
@@ -240,6 +242,7 @@ Item {
         border.width: 1
         z: 10
 
+
         // Hamburger (opens the slide-in menu)
         Rectangle {
             id: burger
@@ -291,6 +294,7 @@ Item {
         }
 
         MainStatusIndicator {
+            id: mainStatus
             anchors.left:       navLogo.right
             anchors.leftMargin: 15
             anchors.top:        parent.top
@@ -418,11 +422,13 @@ Item {
                             anchors.leftMargin: 14
                             spacing: 14
 
-                            Image {
-                                source: modelData.iconSource
-                                width: Math.max(20, Math.round(24 * _root._u))
-                                height: width
-                                fillMode: Image.PreserveAspectFit
+                            QGCColoredImage {
+                                source:             modelData.iconSource
+                                color:              _cText
+                                width:              Math.max(20, Math.round(24 * _root._u))
+                                height:             width
+                                sourceSize.height:  height
+                                fillMode:           Image.PreserveAspectFit
                             }
 
                             Text {
@@ -467,6 +473,7 @@ Item {
         border.color: _boxBorder
         border.width: 1
         z: 5
+
 
         property string _actionFeedback: _activeVehicle ? "Ready" : "Vehicle Disconnected"
 
@@ -597,8 +604,8 @@ Item {
                             width: tabText.implicitWidth + 28
                             height: tabStrip._tabH
                             radius: 5
-                            color: _sel ? _cCard : (tabMouse.containsMouse ? _cHover : "transparent")
-                            border.color: _sel ? _cAccent : _cBorder
+                            color: _sel ? _cSel : (tabMouse.containsMouse ? _cHover : "transparent")
+                            border.color: _sel ? _cText : _cBorder
                             border.width: 1
 
                             Label {

@@ -42,6 +42,8 @@ Item {
     property Fact   _customURLFact:     _settingsManager ? _settingsManager.appSettings.customURL : null
     property Fact   _vworldFact:        _settingsManager ? _settingsManager.appSettings.vworldToken : null
 
+
+
     SettingsPage {
         id:           settingsPage
         anchors.fill: parent
@@ -55,9 +57,22 @@ Item {
             onErrorMessageChanged:  errorDialogComponent.createObject(mainWindow).open()
         }
 
+        // Cards in 2 columns on wide Application Settings (same as other pages)
+               GridLayout {
+                   id:                     mapCardGrid
+                   Layout.fillWidth:       true
+                   readonly property bool twoCol: (typeof mainWindow !== "undefined") && mainWindow.settingsPageOpen && settingsPage.width - 48 >= ScreenTools.defaultFontPixelWidth * 110
+                   Layout.preferredWidth:  twoCol ? Math.min(settingsPage.width - 48, ScreenTools.defaultFontPixelWidth * 200) : -1
+                   columns:                twoCol ? 2 : 1
+                   columnSpacing:          ScreenTools.defaultFontPixelWidth * 2
+                   rowSpacing:             ScreenTools.defaultFontPixelHeight
+                   uniformCellWidths:      true
+
+
         SettingsGroupLayout {
             Layout.fillWidth: true
-
+            heading:    qsTr("Map Provider")
+            Layout.alignment:   Qt.AlignTop
             LabelledComboBox {
                 label:      qsTr("Provider")
                 model:      _mapEngineManager.mapProviderList
@@ -103,8 +118,34 @@ Item {
 
         SettingsGroupLayout {
             Layout.fillWidth:   true
+            heading:            qsTr("Tokens")
+            headingDescription: qsTr("Allows access to additional providers")
+            Layout.alignment:   Qt.AlignTop
+
+            LabelledFactTextField {
+                textFieldPreferredWidth:    _largeTextFieldWidth
+                label:                      qsTr("Mapbox")
+                fact:                       _appSettings.mapboxToken
+            }
+
+            LabelledFactTextField {
+                textFieldPreferredWidth:    _largeTextFieldWidth
+                label:                      qsTr("Esri")
+                fact:                       _appSettings.esriToken
+            }
+
+            LabelledFactTextField {
+                textFieldPreferredWidth:    _largeTextFieldWidth
+                label:                      qsTr("VWorld")
+                fact:                       _appSettings.vworldToken
+            }
+        }
+
+        SettingsGroupLayout {
+            Layout.fillWidth:   true
             heading:            qsTr("Offline Maps")
             headingDescription: qsTr("Download map tiles for use when offline")
+            Layout.alignment:   Qt.AlignTop
 
             Repeater {
                 model: QGroundControl.mapEngineManager.tileSets
@@ -160,33 +201,34 @@ Item {
             }
         }
 
-        SettingsGroupLayout {
-            Layout.fillWidth:   true
-            heading:            qsTr("Tokens")
-            headingDescription: qsTr("Allows access to additional providers")
+        // SettingsGroupLayout {
+        //     Layout.fillWidth:   true
+        //     heading:            qsTr("Tokens")
+        //     headingDescription: qsTr("Allows access to additional providers")
 
-            LabelledFactTextField {
-                textFieldPreferredWidth:    _largeTextFieldWidth
-                label:                      qsTr("Mapbox")
-                fact:                       _appSettings.mapboxToken
-            }
+        //     LabelledFactTextField {
+        //         textFieldPreferredWidth:    _largeTextFieldWidth
+        //         label:                      qsTr("Mapbox")
+        //         fact:                       _appSettings.mapboxToken
+        //     }
 
-            LabelledFactTextField {
-                textFieldPreferredWidth:    _largeTextFieldWidth
-                label:                      qsTr("Esri")
-                fact:                       _appSettings.esriToken
-            }
+        //     LabelledFactTextField {
+        //         textFieldPreferredWidth:    _largeTextFieldWidth
+        //         label:                      qsTr("Esri")
+        //         fact:                       _appSettings.esriToken
+        //     }
 
-            LabelledFactTextField {
-                textFieldPreferredWidth:    _largeTextFieldWidth
-                label:                      qsTr("VWorld")
-                fact:                       _appSettings.vworldToken
-            }
-        }
+        //     LabelledFactTextField {
+        //         textFieldPreferredWidth:    _largeTextFieldWidth
+        //         label:                      qsTr("VWorld")
+        //         fact:                       _appSettings.vworldToken
+        //     }
+        // }
 
         SettingsGroupLayout {
             Layout.fillWidth:   true
             heading:            qsTr("Mapbox Login")
+            Layout.alignment:   Qt.AlignTop
 
             LabelledFactTextField {
                 textFieldPreferredWidth:    _largeTextFieldWidth
@@ -205,6 +247,7 @@ Item {
             Layout.fillWidth:   true
             heading:            qsTr("Custom Map URL")
             headingDescription: qsTr("URL with {x} {y} {z} or {zoom} substitutions")
+            Layout.alignment:   Qt.AlignTop
 
             LabelledFactTextField {
                 textFieldPreferredWidth:    _largeTextFieldWidth
@@ -216,6 +259,7 @@ Item {
         SettingsGroupLayout {
             Layout.fillWidth:   true
             heading:            qsTr("Tile Cache")
+            Layout.alignment:   Qt.AlignTop
 
             LabelledFactTextField {
                 fact: _mapsSettings.maxCacheDiskSize
@@ -225,6 +269,8 @@ Item {
                 fact: _mapsSettings.maxCacheMemorySize
             }    
         }
+
+    }
 
         QGCFileDialog {
             id:             fileDialog
@@ -311,6 +357,7 @@ Item {
                 buttons:    Dialog.Close
             }
         }
+
     }
 
     Component {

@@ -24,8 +24,9 @@ T.ComboBox {
     font.family:    ScreenTools.normalFontFamily
     implicitWidth:  Math.max(background ? background.implicitWidth : 0,
                              contentItem.implicitWidth + leftPadding + rightPadding + padding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             Math.max(contentItem.implicitHeight, indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
+    implicitHeight: _settingsStyle ? ScreenTools.defaultFontPixelHeight * 1.6 :
+                    Math.max(implicitBackgroundHeight + topInset + bottomInset,
+                             implicitContentHeight + topPadding + bottomPadding)
     baselineOffset: contentItem.y + text.baselineOffset
     leftPadding:    padding + (_settingsStyle ? ScreenTools.defaultFontPixelWidth : 0) + (!control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)
     rightPadding:   padding + (_settingsStyle ? ScreenTools.defaultFontPixelWidth : 0) + (control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width)
@@ -35,6 +36,8 @@ T.ComboBox {
     property string alternateText:  ""
 
     property real   _popupWidth:    width
+    property real   _contentWidth:  0                                       // widest item text + paddings (settings style)
+    readonly property real _setPopupW: Math.max(width, _contentWidth)       // popup width on the settings page
     property bool   _onCompleted:   false
     property bool   _settingsStyle: (typeof mainWindow !== "undefined") && mainWindow.settingsPageOpen
     property bool   _showBorder:    _settingsStyle || qgcPal.globalTheme === QGCPalette.Light
@@ -71,17 +74,31 @@ T.ComboBox {
         }
     }
 
-    onModelChanged: _calcPopupWidth()
+    function _calcContentWidth() {
+        if (!_onCompleted || !model) {
+            return
+        }
+        var largest = 0
+        for (var i = 0; i < model.length; i++) {
+            textMetrics.text = control.textRole ? model[i][control.textRole] : model[i]
+            largest = Math.max(textMetrics.width, largest)
+        }
+        // + row padding + popup padding (6 + 6)
+        _contentWidth = largest + itemDelegateMetrics.leftPadding + itemDelegateMetrics.rightPadding + 12
+    }
+
+    onModelChanged: { _calcPopupWidth(); _calcContentWidth() }
 
     Component.onCompleted: {
         _onCompleted = true
         _calcPopupWidth()
+        _calcContentWidth()
     }
 
     // The items in the popup
     delegate: ItemDelegate {
         id:     itemDel
-        width:  control._settingsStyle ? _popupWidth - 12 : _popupWidth
+        width:  control._settingsStyle ? control._setPopupW - 12 : _popupWidth
         height: Math.round(popupItemMetrics.height * 1.75)
 
         property string _text: control.textRole ?
@@ -130,18 +147,17 @@ T.ComboBox {
         font:                       control.font
         color:                      qgcPal.buttonText
     }
-
     background: Rectangle {
-        color:          (_settingsStyle && qgcPal.globalTheme === QGCPalette.Dark) ? "#404040" : qgcPal.button
-        border.color:   (_settingsStyle && qgcPal.globalTheme === QGCPalette.Dark) ? "#606060" : qgcPal.buttonBorder
+        color:          _settingsStyle ? (qgcPal.globalTheme === QGCPalette.Dark ? "#404040" : "#FFFFFF") : qgcPal.button
+        border.color:   _settingsStyle ? (qgcPal.globalTheme === QGCPalette.Dark ? "#606060" : "#E0E0E0") : qgcPal.buttonBorder
         border.width:   _showBorder ? 1 : 0
-        radius:         _settingsStyle ? height / 2 : ScreenTools.buttonBorderRadius
+        radius:         _settingsStyle ? 8 : ScreenTools.buttonBorderRadius
     }
 
     popup: T.Popup {
-        x:                  control.width - _popupWidth
+        x:                  control.width - width
         y:                  control.height + (control._settingsStyle ? 6 : 0)
-        width:              _popupWidth
+        width:              control._settingsStyle ? control._setPopupW : _popupWidth
         height:             Math.min(contentItem.implicitHeight + topPadding + bottomPadding, control.Window.height - topMargin - bottomMargin)
         topMargin:          6
         bottomMargin:       6

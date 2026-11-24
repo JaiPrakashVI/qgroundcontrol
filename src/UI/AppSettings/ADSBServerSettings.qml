@@ -18,6 +18,7 @@ import QGroundControl.FactControls
 import QGroundControl.Controls
 
 SettingsPage {
+    wideColumn: true
     property var    _settingsManager:           QGroundControl.settingsManager
     property var     _adsbSettings:             _settingsManager.adsbVehicleManagerSettings
     property Fact   _adsbServerConnectEnabled:  _adsbSettings.adsbServerConnectEnabled
